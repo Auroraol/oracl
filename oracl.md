@@ -308,15 +308,31 @@ SQL>connect / as sysdba
 **3、以普通用户登录**
 
 ```cmd
-C:\Users\wd-pc>sqlplus scott/123456 
+C:\Users\wd-pc>sqlplus scott/123 
 或
 SQL>connect scott/123      普通用户登录默认数据库   
 SQL>conn scott/tiger       普通用户登录默认数据库   
 或
-SQL>connect scott/123456@servername    普通用户登录指定的servername数据库     
+SQL>connect scott/123@servername    普通用户登录指定的servername数据库     
+```
+
+scott:是Oracle提供的示例用户，有一些数据表(emp雇员表,dept部门表,salgrade薪水等级表,bonus奖金表)
+
+用之前给scott用户解锁，可以先连接conn sys/密码 as sysdba
+
+```sql
+alter user scott account unlock; ——解锁
+conn scott/tiger ——即可登录
 ```
 
 **4、以超级管理员登录**
+
+```sql
+管理员输入指令：conn sys/密码 @orcl as sysdba 
+操作员输入指令：conn sys/密码 @orcl as sysoper
+```
+
+@orcl表示连接标识符(服务器名，如果没有该标识符，SQL Plus会连接到默认数据库)(OracleOradb12gHome1TNSListener要启动)
 
 ```cmd
 C:\Users\wd-pc>sqlplus sys/change_on_install as sysdba　
@@ -325,6 +341,10 @@ SQL>connect sys/change_on_install as sysdba
 ```
 
 **5、以系统管理员登录**
+
+```sql
+conn system/密码
+```
 
 ```cmd
 SQL>connect system/manager as sysdba
@@ -463,6 +483,20 @@ set linesize 90
 用法和linesize一样
 
 #  四、oracle用户管理
+
+**权限角色**
+
+1、connect角色：
+
+>  授予最终用户的典型权限，最基本的权利，能够连接到oracle数据库，并对其他用户的表有访问权限，做select、update、insert等操作
+
+2、 resource角色：
+
+> 是授予开发人员的，可以在自己的表空间创建表、序列
+
+ 3、dba角色：
+
+> 是授予系统管理员的，拥有该角色的用户就能成为系统管理员了，它拥有所有的系统权限
 
 ## 创建用户及授权
 
@@ -619,16 +653,28 @@ revoke select on emp from xiaoming
 
 概述：指定该账户(用户)登陆时最多可以输入密码的次数，也可以指定用户锁定的时间(天)一般用dba的身份去执行该命令。
 
-例子：
+**profile方式锁定:**
 
-指定scott这个用户最多只能尝试3次登陆，锁定时间为2天，让我们看看怎么实现。创建profile文件
+例子:  指定scott这个用户最多只能尝试3次登陆，锁定时间为2天，让我们看看怎么实现。创建profile文件
 
 ```sql
 SQL> create profile lock_account limit failed_login_attempts 3 password_lock_time 2; 
 SQL> alter user scott profile lock_account; 
 ```
 
+**普通方式锁定:**
+
+```sql
+alter user 用户名 account lock;
+```
+
 ### 2.给用户解锁
+
+```sql
+alter user 用户名 account unlock;
+```
+
+例子:
 
 ```sql
 SQL> alter user tea account unlock; 
@@ -672,7 +718,275 @@ SQL> drop profile password_history [casade]
 
 注意：文件删除后，用这个文件去约束的那些用户通通也都被释放了。加了casade，就会把级联的相关东西也给删除掉
 
+## 其他
+
+```sql
+# 查看当前用户
+show user;
+# 查看当前用户表空间的表
+select table_name from user_tables;
+# 修改用户密码
+alter user 用户名 identified by 密码;
+# 创建表空间
+create tablespace 空间名 datafile '存放文件路径' size 空间大小;
+# 设置当前用户默认使用的表空间
+alter database default tablespace 表空间;
+# 修改表空间的名字
+alter tablespace 旧名 rename to 新名;
+# 删除表空间
+drop tablespace 表空间名 including contents and datafiles;
+```
+
+# 五、oracle中sql语句
+
+## 数据库oracle与mysql在语法区别
+
+### 一、数据类型
+
+![image-20231101211247849](oracl.assets/image-20231101211247849.png)
+
+**1. Number类型**
+
++ MySQL中是没有Number类型的，但有int、decimal 、tinyint、smallint、mediumint、bigint等类型
+
++ Oracle中
+
+  + Number(5,1) 对应MySQL中的decimal(5,1)
+
+  + Number(5) 对应int(5), mysql8.0直接用int
+
+**2. Varchar2(n)类型**
+
++ MySQL中用varchar(n)替代Oracle Varchar2(n)类型的类型是类型
+
+**3. Date 类型**
+
++ MySQL 中的日期时间类型有Date、Time、Datetime等类型
+  + MySQL中Date类型仅表示日期(年-月-日)
+  + Time类型仅表示时间（时:分:秒)
+  + Datetime类型表示日期时间(年-月-日 时:分:秒)
++ Oracle中的Date类型和MySQL中的Datetime类型一致
+
+### 二、函数
+
+**1. length(str)函数**
+
++ MySQL 中对应的函数为char_length(str)
++ Oracle中的length(str)是获取字符串长度的函数
+
+**2. sys_guid()函数**
+
++ MySQL中通过UUID()生成随机序列 
++ Oracle中通过sys_guid()函数是生成随机序列
+
+**3. 时间格式化函数**
+
++ 将时间转换为字符串型时间
+  + MySQL中date_format(NOW(),'%Y-%m-%d')  
+  + 对应Oracle中的to_char(sysdate, 'YYYY-MM-DD')
+
++ 将字符串型时间转换为时间类型
+  + MySQL 中str_to_date('2019-01-01','%Y-%m-%d') 
+  + 对应Oracle中的 to_date('2019-01-01', 'YYYY-MM-DD')
+
++ MySQL 中包括时分秒的函数转换：DATE_FORMAT(NOW(),'%Y-%m-%d %H:%i:%s')，str_to_date('2019-01-01','%Y-%m-%d %H:%i:%s')
+
+**4. 条件函数（nvl()、nvl2()、decode()）**
+
++ nvl(tab.columnName, 0)：如果tab.columnName值为空，则返回值取0，否则取tab.columnName；对应的MySQL函数为：ifnull(tab.columnName, 0)
+
++ nvl2(expr1,expr2,expr3)：如果expr1不为null，则返回expr2，否则返回expr3；对应的MySQL函数为：if(expr1,expr2,expr3)。
+
++ DECODE(value, val1, val2, val3)：如果value等于val1，则返回val2，否则返回val3；MySQL可用IF函数表示：if(value=val1, val2, val3)；
+
++ DECODE(value, if1, val1, if2,val2,...,ifn, valn, val)：如果value等于if1，则返回val1，如果value等于if2，则返回value2...如果value等于ifn，则返回valn，否则返回val；MySQL对于这种判断可以通过case when then else end;l来判断，即：case when value=if1 then val1 when value=if2 then val2,,,when value=ifn then valn else val end;
+
+**5. trunc()函数**
+
++ TRUNC(12.123)：返回整数(12)；MySQL对应的函数：truncate(12.123, 0)；
+
++ TRUNC(12.123, 2)：返回值保留2为小数(12.12)；MySQL对应的函数：truncate(12.123, 2)；
+
++ TRUNC(SYSDATE)：返回值为(2019-07-26 00:00:00)；MySQL对应的为cast(now() as datetime)：返回值为(2019-07-26 14:11:38)；
+
++ MySQL的cast函数语法为：CAST(xxx AS 类型) （可用类型为：二进制,同带binary前缀的效果:BINARY；字符型,可带参数:CHAR()；日期:DATE；时间:TIME；日期时间型: DATETIME；浮点数: DECIMAL；整数:SIGNED；无符号整数:UNSIGNED）
+
+**6. to_char() to_number()**
+
++ to_char(123)：将数字123转换为字符串123；MySQL对应的函数为CAST(123 AS CHAR(3))；
+
++ to_number('123')：将字符串数字123转换为数字类型；MySQL对应的函数为cast('123' as SIGNED)；
+
+**7. sysdate 当前时间**
+
++  sysdate：返回当前日期+时间
++  MySQL对应的函数为 now()
+
+### 三、其他
+
+**1. 引号**
+
++ MySQL可识别双引号和单引号
++ Oracle只能识别单引号
+
+**2. 字符串连接符 ||** 
+
++ Oracle 可用'||'来连接字符串
++ MySQL不支持'||'连接，MySQL可通过concat()函数链接字符串。
+
+```sql
+--Oracle的
+a.studentname||'【'||a.studentno||'】'
+--相当于 MySQL的 
+concat(a.studentname, '【', a.studentno, '】')
+```
+
+**3. ROWNUM**
+
++ MySQL通过limit来获取前n条记录
+
++ Oracle可通过rownum获取前n条记录
++ 在Oracle中rownum作为where条件的一部分，而MySQL中limit不是where条件的一部分。   
+
+```sql
+-- oracle
+-- rownum语法如下：
+SELECT * FROM XJ_STUDENT WHERE ROWNUM = 1; -- 查询第一条数据
+SELECT * FROM XJ_STUDENT WHERE ROWNUM <= 10; -- 获取前10条数据
+-- 但rownum不支持查询后几条或第n(n>1)条数据，例如以下sql是不支持的
+SELECT * FROM XJ_STUDENT WHERE ROWNUM > 2;  #报错
+SELECT * FROM XJ_STUDENT WHERE ROWNUM = 3;  #报错
+
+-- mysql
+-- limit 语法如下：
+SELECT * from fw_department limit 3; -- 查询前3条数据
+SELECT * from fw_department limit 2, 4; -- 从第2(序号从0开始)条开始，查4条记录
+```
+
+**4. 空数据排序(nulls first 和nulls last)**
+
+```sql
+-- null值排在最前
+SELECT * FROM FW_DEPARTMENT A ORDER BY A.REMARK DESC NULLS FIRST
+-- null值排在最后
+SELECT * FROM FW_DEPARTMENT A ORDER BY A.REMARK DESC NULLS LAST
+ 
+-- MySQL 可通过IF和ISNULL函数达到相同的效果
+-- null值排在最后
+select * from FW_DEPARTMENT A order by IF(ISNULL(A.REMARK),1,0),A.REMARK desc
+-- null值排在最前
+select * from FW_DEPARTMENT A order by IF(ISNULL(A.REMARK),0,1),A.REMARK desc
+```
+
+**5. 表(左/右)关联(+)**
+
++ MySQL只能使用left join 和 right join
+
++ Oracle左连接,右连接可以使用(+)来实现
+
+```sql
+-- Oracle 左关联
+select * from taba, tabb where taba.id = tabb.id(+);
+-- Oracle 右关联
+select * from taba, tabb where taba.id(+) = tabb.id;
+
+-- MySQL 左关联
+select * from taba left join tabb on taba.id=tabb.id;
+-- MySQL 右关联
+select * from taba right join tabb on taba.id=tabb.id;
+```
+
+**6. 删除语法**
+
+MySQL的删除语法没有Oracle那么随意，例如下面的sql在Oracle中可以执行，但在MySQL中就不可以。注意: mysql8.0后可以
+
+```sql
+-- Oracle 可执行，但MySQL中不能执行
+DELETE FROM FW_DEPARTMENT A WHERE A.DEPID = '111';
+DELETE FW_DEPARTMENT WHERE DEPID = '111';
+
+-- MySQL中删除语句格式如下：
+DELETE FROM FW_DEPARTMENT WHERE DEPID = '111';
+```
+
+**7. 递归查询(start with connect by prior)**
+
+MySQL不支持(start with connect by prior)的这种递归查询，但可以通过自定义函数来实现。
+
+```sql
+-- Oracle 递归查询 查询部门ID为‘1111’的所有子部门（包含自身）
+SELECT *
+FROM FW_DEPARTMENT
+START WITH DEPID='1111'
+CONNECT BY PRIOR DEPID = PARENTDEPID;
+-- Oracle 递归查询 查询部门ID为‘1111’的所有父部门（包含自身）
+SELECT *
+FROM FW_DEPARTMENT
+START WITH DEPID='1111'
+CONNECT BY PRIOR PARENTDEPID = DEPID;
+
+-- MySQL 先创建fun_getDepIDList函数，用于查询部门ID字符串
+CREATE FUNCTION fun_getDepIDList(rootId VARCHAR(32))
+RETURNS VARCHAR(6000)
+BEGIN 
+	DECLARE pTemp VARCHAR(6000);
+	DECLARE cTemp VARCHAR(6000);
+	SET pTemp='$';
+	SET cTemp=rootId;
+	WHILE cTemp is not null DO
+		set pTemp=CONCAT(pTemp,',',cTemp);
+		SELECT GROUP_CONCAT(depid) INTO cTemp from fw_department
+		WHERE FIND_IN_SET(PARENTDEPID,cTemp)>0;
+	END WHILE;
+	RETURN pTemp;
+END;
+
+-- 查询部门ID为‘1111’的所有子部门（包含自己）
+select * from fw_department
+where FIND_IN_SET(DEPID, fun_getDepIDList('1111'));
+
+-- 查询部门ID为‘1111’的所有父部门(包含自己)
+select * from fw_department
+where FIND_IN_SET('1111', fun_getDepIDList(DEPID));
+```
+
+**8. merge into**
+
+MySQL不支持（merge into），但提供的replace into 和on duplicate key update可实现相似的功能。
+
+```sql
+-- Oracle merge into (有则修改，无则新增)
+MERGE INTO TMPDEPTAB A
+USING (SELECT '1111' DEPID, '哈哈' DEPNAME FROM DUAL) B
+ON (A.DEPID = B.DEPID)
+WHEN MATCHED THEN 
+	UPDATE SET A.DEPNAME = B.DEPNAME
+WHEN NOT MATCHED THEN 
+	INSERT(DEPID, DEPNAME) VALUES(B.DEPID, B.DEPNAME);
+
+-- MySQL replace into (特点：1、先删后增； 2、插入/更新的表必须有主键或唯一索引；
+-- 3、未修改/新增的数据项，如果必填，则必须有默认值)
+-- 1、由于是先删后增，所以需要满足以下2个条件之一：
+--      1.要么必填项有默认值； 
+--      2.要么插入/更新时为没有默认值的必填项赋值， 否则新增时会报错。
+-- 2、表中需要有主键或唯一索引，否则下面语句如果执行多次，表中会出现重复数据。
+replace into fw_department(DEPID,PARENTDEPID,DEPNO,DEPNAME) 
+values('1111111', '1234','123', '哈哈');
+
+-- MySQL on duplicate key update (特点：1、插入/更新的表必须有主键或唯一索引；
+-- 2、未修改/新增的数据项，如果必填，则必须有默认值)
+insert into fw_department(depid,parentdepid,depno,depname)
+select '1111111' depid, '123' parentdepid, 'e12' depno, '哈哈哈哈' depname
+from fw_department
+on duplicate key 
+update parentdepid = values(parentdepid),
+	depno=values(depno),
+	depname=values(depname);
+```
+
 ## oracle表的管理
+
+[Oracle的DCL、DDL、DML语言学习使用](https://blog.csdn.net/qq_29864051/article/details/131294279?spm=1001.2101.3001.6650.1&utm_medium=distribute.pc_relevant.none-task-blog-2~default~OPENSEARCH~Rate-1-131294279-blog-50623974.235^v38^pc_relevant_sort_base1&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2~default~OPENSEARCH~Rate-1-131294279-blog-50623974.235^v38^pc_relevant_sort_base1&utm_relevant_index=2)
 
 数据类型，表创建删除，数据 CRUD操作
 
@@ -866,7 +1180,7 @@ DROP TABLE student; --删除表的结构和数据；
 
  truncate TABLE student; --删除表中的所有记录，表结构还在，不写日志，无法找回删除的记录，速度快。
 
-## 5. [oracle表查询(1)](http://taeky.javaeye.com/blog/608779)
+### oracle表查询(1)
 
 n 介绍
 
@@ -1009,7 +1323,7 @@ n 使用is null的操作符
 
 正确写法：SELECT * FROM emp WHERE mgr is null; 
 
-## 6. [oracle表查询(2)](http://taeky.javaeye.com/blog/609924)
+###  oracle表查询(2)
 
 n 使用逻辑操作符号
 
@@ -1396,18 +1710,6 @@ database Configuration Assistant 【数据库配置助手】
 
 2).我们可以用手工步骤直接创建。 
 
-## 7. [java操作oracle](http://taeky.javaeye.com/blog/611443)
+# 六、java操作oracle
 
-内容介绍
-
-1.上节回顾
-
-2.java程序如何操作oracle √ 
-3.如何在oracle中操作数据 
-4.oracle事务处理 
-5.sql函数的使用 √ 
-期望目标 
-1.掌握oracle表对数据操作技巧 
-2.掌握在java程序中操作oracle 
-3.理解oracle事物概念 
-4.掌握
+TODO
