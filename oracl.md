@@ -41,13 +41,11 @@ select * from Scores;
 
 ![image-20231030202614083](oracl.assets/image-20231030202614083.png)
 
-
-
-# 下载Oracle19c资料包
+# 安装Oracle19c
 
 https://www.oracle.com/database/technologies/oracle-database-software-downloads.html
 
-![img](oracl.assets/1567668194696-0fb940c8-9211-401c-a436-732cc1298142.png)
+<img src="oracl.assets/1567668194696-0fb940c8-9211-401c-a436-732cc1298142.png" alt="img" style="zoom: 50%;" />
 
 需要登录Oracle的账号。
 
@@ -255,11 +253,40 @@ orclpdb =
 
 ![img](oracl.assets/1618743243055-b1a063d1-26e5-47e8-97e2-1456088365d9.jpeg)
 
+# 一、引言
 
+安装可参考：[Windows10环境下载安装Oracle19c教程](https://blog.csdn.net/qq_29864051/article/details/131261905?spm=1001.2014.3001.5501)
 
-# Oracle数据库的一些常用命令
+## Oracle的体系结构
 
-## 一、sqlplus常用命令
+在Oracle数据库中，存在以下层次关系：实例（Instance） > 用户（User） > 表空间（Tablespace） > 表（Table）
+
+1. 实例（Instance）：
+   实例是Oracle数据库运行时的一个独立环境。它包括了数据库`内存结构和后台进程`，负责管理数据库的访问和操作。一个物理服务器上可以`同时运行多个`Oracle实例，每个实例都有自己的系统资源和配置。
+2. 用户（User）：
+   用户是数据库中的逻辑概念，用于`识别和控制对数据库的访问和操作`。每个用户都有自己的用户名和密码，并且被授予特定的权限和角色。用户可以创建表、视图、索引等数据库对象，并可以执行各种SQL操作。
+3. 表空间（Tablespace）：
+   表空间是`逻辑存储单元`，用于组织和管理数据库中的表、索引和其他对象。一`个数据库可以包含多个表空间，每个表空间由一个或多个数据文件组成`，这些文件存储了实际的数据和索引。
+4. 表（Table）：
+   表是数据库中的`基本存储结构`，用于存储数据。表由一个或多个列组成，每列定义了特定的数据类型。表包含行（记录），每行代表一个数据实体。用户可以在自己的模式中创建表，并使用SQL语句对表进行插入、更新、删除和查询操作。
+
+<img src="oracl.assets/4564b7567ded44e59cc56614e7e7a3cb.png" alt="img" style="zoom:67%;" />
+
+# 二、Oracle数据库的用户
+
+oracle安装成功后，会默认生成三个用户
+
++ 超级管理员：      sys  权限最高 它的角色 dba 密码 change_on_install
+
++ 系统管理员：      system 权限也很高他的角色是dbaoper 密码 manager
+
++ 普通用户：          scott   密码tiger或者123,  没有操作用户的权限【创建修改删除】
+
+sys有 create databse 的权限 ，而system没有.其它相似在日常对oracle管理过程中，使用system就够了
+
+# 三、 sqlplus常用命令
+
+## 3.1 登录相关
 
 **1、进入sqlplus模式**
 
@@ -283,7 +310,7 @@ SQL>connect / as sysdba
 ```cmd
 C:\Users\wd-pc>sqlplus scott/123456 
 或
-SQL>connect scott/123456   普通用户登录默认数据库   
+SQL>connect scott/123      普通用户登录默认数据库   
 SQL>conn scott/tiger       普通用户登录默认数据库   
 或
 SQL>connect scott/123456@servername    普通用户登录指定的servername数据库     
@@ -292,9 +319,9 @@ SQL>connect scott/123456@servername    普通用户登录指定的servername数�
 **4、以超级管理员登录**
 
 ```cmd
-C:\Users\wd-pc>sqlplus sys/123456 as sysdba　
+C:\Users\wd-pc>sqlplus sys/change_on_install as sysdba　
 或
-SQL>connect sys/123456 as sysdba
+SQL>connect sys/change_on_install as sysdba
 ```
 
 **5、以系统管理员登录**
@@ -318,6 +345,25 @@ SQL>exit
 
 例子
 
+```cmd
+C:\Users\Administrator>sqlplus /nolog
+SQL*Plus: Release 11.2.0.1.0 Production on 星期三 11月 1 0
+Copyright (c) 1982, 2010, Oracle.  All rights reserved.
+SQL> conn system/manager as sysdba     //以system用户登陆
+已连接。
+SQL> conn scott/123  //以scott用户登录
+ERROR:
+ORA-28002: the password will expire within 7 days
+已连接。
+SQL> conn sys/change_on_install as sysdba //以sys用户登陆,必须要加上as sysdba
+已连接。
+SQL> show user
+USER 为 "SYS"
+SQL>
+```
+
+例子
+
 <img src="oracl.assets/image-20231030232756813.png" alt="image-20231030232756813" style="zoom:67%;" />
 
 例子
@@ -334,49 +380,1093 @@ SQL>exit
 
 DBA：数据库管理员  DB：database 数据库  DBMS：数据库管理系统
 
-## 二、Oracle数据库的用户
-
-oracle安装成功后，会默认生成三个用户
-
-+ 超级管理员：      sys  权限最高 它的角色 dba 密码 changeon_installsystem
-
-+ 系统管理员：      system 权限也很高他的角色是dbaoper 密码 manager
-
-+ 普通用户：          scott   密码tiger,  没有操作用户的权限【创建修改删除】
-
-sys有 create databse 的权限 ，而system没有.其它相似在日常对oracle管理过程中，使用system就够了
-
 删除用户:drop user lxixi cascade;  cascade 级联删除    授权：创建的用户任何权限【我们需要对用户授权】       角色： connect resource dba       grant connect,resource,dba to lxixi    撤销权限：      revoke connect,resourc,dba from lxixi;
 
-##  三、oracle的登录方式
+##  3.2 连接命令
 
-```cmd
-sqlplus / as sysdba							# 以操作系统权限认证的oracle sys管理员登录
-sqlplus /nolog								# 不暴露密码的登录方式
-sqlplus scott/tiger							# 非管理员用户登录
-sqlplus										# 不显露密码的登录方式
+**1.conn[ect]**
+
+说明:：conn 用户名/密码@网络服务名[as sysdba/sysoper]当用特权用户身份连接时，必须带上as sysdba或是as sysoper
+
+远程连接：sqlplus usr/pwd@//host:port/sid 如：conn sys/admin@127.0.0.1:1521/orcl as sysdba;
+
+**2.disc[onnect]**
+
+说明: 该命令用来断开与当前数据库的连接
+
+**3.psssw[ord]**
+
+说明: 该命令用于修改用户的密码，如果要想修改其它用户的密码，需要用sys/system登录。4.show user
+
+说明: 显示当前用户名
+
+**5.exit**
+
+说明: 该命令会断开与数据库的连接，同时会退出sql*plus 
+
+## 3.3 文件操作命令
+
+**1.start和@**
+
+说明: 运行sql脚本
+
+案例: sql>@ d:\a.sql或是sql>start d:\a.sql
+
+**2.edit**
+
+说明: 该命令可以编辑指定的sql脚本
+
+案例: sql>edit d:\a.sql,这样会把d:\a.sql这个文件打开
+
+**3.spool**
+
+说明: 该命令可以将sql*plus屏幕上的内容输出到指定文件中去。
+
+案例: sql>spool d:\b.sql 并输入 sql>spool off 
+
+##  3.4 交互式命令
+
+**1.&**
+
+说明：可以替代变量，而该变量在执行时，需要用户输入。
+
+select * from emp where job='&job'；
+
+**2.edit**
+
+说明：该命令可以编辑指定的sql脚本
+
+案例：SQL>edit d:\a.sql
+
+**3.spool**
+
+说明：该命令可以将sql*plus屏幕上的内容输出到指定文件中去。
+
+spool d:\b.sql 并输入 spool off
+
+## 3.5 显示和设置环境变量
+
+概述：可以用来控制输出的各种格式，set show如果希望永久的保存相关的设置，可以去修改glogin.sql脚本
+
+**1.linesize**
+
+说明：设置显示行的宽度，默认是80个字符
+
+show linesize 
+
+set linesize 90
+
+**2.pagesize**
+
+说明：设置每页显示的行数目，默认是14
+
+用法和linesize一样
+
+#  四、oracle用户管理
+
+
+
+权限: 对象权限 系统权限 ...resource 建表
+
+
+
+## 创建用户及授权
+
+概述：在oracle中要创建一个新的用户使用create user语句，<font color=red>一般是具有dba(数据库管理员)的权限才能进进行。</font>
+
+create user 用户名 identified by 密码; (oracle有个毛病，密码必须以字母开头，如果以字母开头，它不会创建用户)
+
+```sql
+create user 用户名 identified by 密码;		# 创建用户
+grant 权限 on 表空间.表名 to 用户名;			# 赋权限给用户
 ```
 
-例子
+例子：
 
-```cmd
-[oracle@localhost ~]$ sqlplus /nolog
-SQL*Plus: Release 11.2.0.3.0 Production on Wed Dec 14 00:11:34 2022
-Copyright (c) 1982, 2011, Oracle.  All rights reserved.
-SQL> connect taibai@prod
-Enter password: 
-Connected.
+```sql
+SQL> create user newuser identified by 123;			# 创建用户
+User created.
+SQL> grant connect,resource,dba to newuser;	        # 赋权限
+Grant succeeded.
+```
+
+## 用户修改密码
+
+概述：
+
++ 如果给自己修改密码可以直接使用
+
++ 如果给别人修改密码则需要具有dba的权限，或是拥有alter user的系统权限
+
+```sql
+SQL> password 用户名      #修改自己的密码
+SQL> alter user 用户名 identified by 新密码  #修改别人的密码
+```
+
+## 删除用户
+
+概述：<font color=red>一般以dba的身份去删除某个用户，如果用其它用户去删除用户则需要具有drop user的权限。</font>
+
+在删除用户时，如果要删除的用户，已经创建了表，那么就需要在删除的时候带一个参数cascade; 
+
+```sql
+drop user 用户名 [cascade]
+```
+
+
+
+
+
+// 权限的维护
+
+
+
+show user
+
+\> scott
+
+希望小明用户可以去查询scott中的emp表/还希望小明还可以把emp表授权给其他用户
+
+-- 如果是对象权限, 就是 with grant option
+
+grant select on emp to xiaoming with grant option;
+
+-- 如果是系统权限, 
+
+grant connect to xiaoming with admin option;
+
+
+
+如果scoot把xiaoming权限回收, 小明还传递的权限--->都没有了
+
+
+
+
+
+权限管理
+
+
+
+用户管理
+
+
+
+表管理
+
+
+
+## 用户管理的综合案例
+
+概述：创建的新用户是没有任何权限的，甚至连登陆的数据库的权限都没有，需要为其指定相应的权限。给一个用户赋权限使用命令grant，回收权限使用命令revoke。
+
+警告: 您不再连接到 ORACLE。
+
+```sql
+SQL> show user; 
+USER 为 "" 
+SQL> conn system/p;
+已连接。 
+SQL> grant connect to xiaoming;
+授权成功。 
+SQL> conn xiaoming/m12;
+已连接。 
 SQL>
-Enter user-name：sys
-Enter password：password as sysdba 	# 以sys用户登陆的话 必须要加上 as sysdba 子句，其他用户直接输入密码即可
-#### 内部切换用户
-[oracle@localhost ~]$ sqlplus /nolog
-SQL*Plus: Release 11.2.0.3.0 Production on Wed Dec 14 00:16:02 2022
-Copyright (c) 1982, 2011, Oracle.  All rights reserved.
-SQL> connect /as sysdba
-Connected.
-SQL> connect scott/tiger
-Connected.
-SQL> 
 ```
 
+注意：grant connect to xiaoming;
+
+\* 希望xiaoming用户可以去查询emp表 
+
+\* 希望xiaoming用户可以去查询scott的emp表
+
+ grant select on emp to xiaoming 
+
+\* 希望xiaoming用户可以去修改scott的emp表
+
+ grant update on emp to xiaoming
+
+\* 希望xiaoming用户可以去修改/删除，查询，添加scott的emp表
+
+ grant all on emp to xiaoming
+
+\* scott希望收回xiaoming对emp表的查询权限
+
+ revoke select on emp from xiaoming 
+
+//对权限的维护。
+
+\* 希望xiaoming用户可以去查询scott的emp表/还希望xiaoming可以把这个权限继续给别人。
+
+--如果是对象权限，就加入 with grant option
+
+grant select on emp to xiaoming with grant option
+
+我的操作过程：
+
+```
+ SQL> conn scott/tiger;
+
+已连接。
+
+SQL> grant select on scott.emp to xiaoming with grant option;
+
+授权成功。
+
+SQL> conn system/p;
+
+已连接。
+
+SQL> create user xiaohong identified by m123;
+
+用户已创建。
+
+SQL> grant connect to xiaohong;
+
+授权成功。 
+
+SQL> conn xiaoming/m12;
+
+已连接。
+
+SQL> grant select on scott.emp to xiaohong;
+
+授权成功。 
+```
+
+--如果是系统权限。
+
+system给xiaoming权限时：
+
+ grant connect to xiaoming with admin option
+
+问题：如果scott把xiaoming对emp表的查询权限回收，那么xiaohong会怎样？
+
+答案：被回收。
+
+下面是我的操作过程：
+
+```
+SQL> conn scott/tiger;
+
+已连接。
+
+SQL> revoke select on emp from xiaoming;
+
+撤销成功。 
+
+SQL> conn xiaohong/m123;
+
+已连接。
+
+SQL> select * from scott.emp; 
+
+select * from scott.emp
+```
+
+ 
+
+第 1 行出现错误:
+
+ORA-00942: 表或视图不存在
+
+结果显示：小红受到诛连了。。 
+
+n 使用profile管理用户口令
+
+概述：profile是口令限制，资源限制的命令集合，当建立数据库的，oracle会自动建立名称为default的profile。当建立用户没有指定profile选项，那么oracle就会将default分配给用户。 
+
+1.账户锁定
+
+概述：指定该账户(用户)登陆时最多可以输入密码的次数，也可以指定用户锁定的时间(天)一般用dba的身份去执行该命令。
+
+例子：指定scott这个用户最多只能尝试3次登陆，锁定时间为2天，让我们看看怎么实现。创建profile文件
+
+SQL> create profile lock_account limit failed_login_attempts 3 password_lock_time 2; 
+
+SQL> alter user scott profile lock_account; 
+
+2.给账户(用户)解锁 
+
+SQL> alter user tea account unlock; 
+
+3.终止口令
+
+为了让用户定期修改密码可以使用终止口令的指令来完成，同样这个命令也需要dba的身份来操作。
+
+例子：给前面创建的用户tea创建一个profile文件，要求该用户每隔10天要修改自己的登陆密码，宽限期为2天。看看怎么做。
+
+SQL> create profile myprofile limit password_life_time 10 password_grace_time 2; 
+
+SQL> alter user tea profile myprofile;
+
+口令历史
+
+概述：如果希望用户在修改密码时，不能使用以前使用过的密码，可使用口令历史，这样oracle就会将口令修改的信息存放到数据字典中，这样当用户修改密码时，oracle就会对新旧密码进行比较，当发现新旧密码一样时，就提示用户重新输入密码。
+
+例子：
+
+1）建立profile
+
+SQL>create profile password_history limit password_life_time 10 password_grace_time 2 password_reuse_time 10 
+
+password_reuse_time //指定口令可重用时间即10天后就可以重用
+
+2）分配给某个用户 
+
+n 删除profile
+
+概述：当不需要某个profile文件时，可以删除该文件。
+
+SQL> drop profile password_history 【casade】
+
+注意：文件删除后，用这个文件去约束的那些用户通通也都被释放了。
+
+加了casade，就会把级联的相关东西也给删除掉
+
+## 4. [oracle表的管理(数据类型，表创建删除，数据 CRUD操作)](http://taeky.javaeye.com/blog/607467)
+
+内容介绍 
+
+· 1.上节回顾
+
+· 2.oracle的表的管理
+
+· 3.基本查询
+
+· 4.复杂查询
+
+· 5.oracle数据库的创建
+期望目标 
+
+· 1.掌握oracle表的管理（创建/维护）
+
+· 2.掌握对oracle表的各种查询技巧 
+
+· 3.学会创建新的oracle数据库 
+
+oracle的表的管理
+
+表名和列的命名规则
+
+· 必须以字母开头
+
+· 长度不能超过30个字符
+
+· 不能使用oracle的保留字
+
+· 只能使用如下字符 A-Z，a-z，0-9，$,#等
+
+oracle支持的数据类型
+
+n 字 符类 
+
+char  定长 最大2000个字符。
+
+例子：char(10) ‘小韩’前四个字符放‘小韩’，后添6个空格补全 如‘小韩   ’ varchar2(20) 变长 最大4000个字符。
+
+例子：varchar2（10） ‘小韩’ oracle分配四个字符。这样可以节省空间。
+
+clob(character large object) 字符型大对象 最大4G
+
+char 查询的速度极快浪费空间，查询比较多的数据用。
+
+varchar 节省空间 
+
+n 数字型
+
+number范围 -10的38次方 到 10的38次方
+
+可以表示整数，也可以表示小数 
+
+number(5,2)
+
+表示一位小数有5位有效数，2位小数
+
+范围：-999.99到999.99
+
+number(5)
+
+表示一个5位整数
+
+范围99999到-99999 
+
+n 日期类型 
+
+date 包含年月日和时分秒  oracle默认格式 1-1月-1999 
+
+timestamp 这是oracle9i对date数据类型的扩展。可以精确到毫秒。
+
+n 图片 
+
+blob 二进制数据 可以存放图片/声音 4G  一般来讲，在真实项目中是不会把图片和声音真的往数据库里存放，一般存放图片、视频的路径，如果安全需要比较高的话，则放入数据库。怎样创建表 
+
+n 建表 
+
+--学生表 
+
+create table student (  ---表名
+
+​     xh    number(4),  --学号
+
+​     xm  varchar2(20),  --姓名
+
+​     sex   char(2),   --性别
+
+​     birthday date,     --出生日期
+
+​     sal   number(7,2)  --奖学金
+
+); 
+
+--班级表 
+
+CREATE TABLE class(
+
+classId NUMBER(2),
+
+cName VARCHAR2(40)
+
+);
+
+修改表
+
+n 添加一个字段
+
+SQL>ALTER TABLE student add (classId NUMBER(2)); 
+n 修改一个字段的长度
+
+SQL>ALTER TABLE student MODIFY (xm VARCHAR2(30));
+
+ n 修改字段的类型/或是名字（不能有数据） 不建议做
+
+SQL>ALTER TABLE student modify (xm CHAR(30)); 
+
+n 删除一个字段 不建议做(删了之后，顺序就变了。加就没问题，应为是加在后面) 
+
+SQL>ALTER TABLE student DROP COLUMN sal; 
+
+n 修改表的名字  很少有这种需求
+
+SQL>RENAME student TO stu; 
+
+n 删除表 
+
+SQL>DROP TABLE student;
+
+添加数据 
+
+n 所有字段都插入数据
+
+INSERT INTO student VALUES ('A001', '张三', '男', '01-5月-05', 10); 
+
+oracle中默认的日期格式‘dd-mon-yy’ dd日子（天） mon 月份 yy 2位的年 ‘09-6月-99’ 1999年6月9日
+
+修改日期的默认格式（临时修改，数据库重启后仍为默认；如要修改需要修改注册表）
+
+ALTER SESSION SET NLS_DATE_FORMAT ='yyyy-mm-dd';
+
+修改后，可以用我们熟悉的格式添加日期类型：
+
+ INSERT INTO student VALUES ('A002', 'MIKE', '男', '1905-05-06', 10); 
+
+n 插入部分字段
+
+INSERT INTO student(xh, xm, sex) VALUES ('A003', 'JOHN', '女');
+
+ n 插入空值
+
+INSERT INTO student(xh, xm, sex, birthday) VALUES ('A004', 'MARTIN', '男', null);
+
+问题来了，如果你要查询student表里birthday为null的记录，怎么写sql呢？
+
+错误写法：select * from student where birthday = null;
+
+正确写法：select * from student where birthday is null;
+
+如果要查询birthday不为null,则应该这样写：
+
+ select * from student where birthday is not null;
+
+修改数据
+
+n 修改一个字段
+
+UPDATE student SET sex = '女' WHERE xh = 'A001'; 
+
+n 修改多个字段
+
+UPDATE student SET sex = '男', birthday = '1984-04-01' WHERE xh = 'A001';
+
+修改含有null值的数据
+
+不要用 = null 而是用 is null；
+
+ SELECT * FROM student WHERE birthday IS null;
+
+n 删除数据
+
+DELETE FROM student;
+
+删除所有记录，表结构还在，写日志，可以恢复的，速度慢。
+
+Delete 的数据可以恢复。
+
+savepoint a; --创建保存点
+
+DELETE FROM student; 
+
+rollback to a; --恢复到保存点
+
+一个有经验的DBA，在确保完成无误的情况下要定期创建还原点。
+
+DROP TABLE student; --删除表的结构和数据；
+
+ delete from student WHERE xh = 'A001'; --删除一条记录；
+
+ truncate TABLE student; --删除表中的所有记录，表结构还在，不写日志，无法找回删除的记录，速度快。
+
+## 5. [oracle表查询(1)](http://taeky.javaeye.com/blog/608779)
+
+n 介绍
+
+在我们讲解的过程中我们利用scott用户存在的几张表（emp，dept）为大家演示如何使用select语句，select语句在软件编程中 非常有用，希望大家好好的掌握。
+
+emp 雇员表 
+
+clerk 普员工
+
+salesman 销售
+
+manager 经理
+
+analyst 分析师
+
+president 总裁
+
+mgr 上级的编号
+
+hiredate 入职时间
+
+sal 月工资
+
+comm 奖金
+
+deptno 部门
+dept部门表
+
+deptno 部门编号
+
+accounting 财务部
+
+research 研发部
+
+operations 业务部
+
+loc 部门所在地点
+
+salgrade  工资级别
+
+grade  级别
+
+losal  最低工资
+
+hisal  最高工资
+
+简单的查询语句
+
+n 查看表结构
+
+DESC emp;
+
+ n 查询所有列
+
+SELECT * FROM dept;
+
+切忌动不动就用select *
+
+SET TIMING ON; 打开显示操作时间的开关，在下面显示查询时间。
+
+CREATE TABLE users(userId VARCHAR2(10), uName VARCHAR2 (20), uPassw VARCHAR2(30)); 
+
+INSERT INTO users VALUES('a0001', '啊啊啊啊', 'aaaaaaaaaaaaaaaaaaaaaaa');
+
+ --从自己复制，加大数据量 大概几万行就可以了 可以用来测试sql语句执行效率
+
+INSERT INTO users (userId,UNAME,UPASSW) SELECT * FROM users; 
+
+SELECT COUNT (*) FROM users;统计行数
+
+n 查询指定列
+
+SELECT ename, sal, job, deptno FROM emp; 
+
+n 如何取消重复行DISTINCT
+
+SELECT DISTINCT deptno, job FROM emp;
+
+?查询SMITH所在部门，工作，薪水
+
+SELECT deptno,job,sal FROM emp WHERE ename = 'SMITH';
+
+注意：oracle对内容的大小写是区分的，所以ename='SMITH'和ename='smith'是不同的
+
+n 使用算术表达式 nvl null
+
+问题：如何显示每个雇员的年工资？
+
+SELECT sal*13+nvl(comm, 0)*13 "年薪" , ename, comm FROM emp;
+
+ n 使用列的别名
+
+SELECT ename "姓名", sal*12 AS "年收入" FROM emp;
+
+ n 如何处理null值
+
+使用nvl函数来处理
+
+n 如何连接字符串（||）
+
+SELECT ename || ' is a ' || job FROM emp; 
+
+n 使用where子句
+
+问题：如何显示工资高于3000的 员工？
+
+ SELECT * FROM emp WHERE sal > 3000;
+
+问题：如何查找1982.1.1后入职的员工？
+
+ SELECT ename,hiredate FROM emp WHERE hiredate >'1-1月-1982';
+
+问题：如何显示工资在2000到3000的员工？
+
+ SELECT ename,sal FROM emp WHERE sal >=2000 AND sal <= 3000;
+
+n 如何使用like操作符 
+
+%：表示0到多个字符 _：表示任意单个字符
+
+问题：如何显示首字符为S的员工姓名和工资？
+
+SELECT ename,sal FROM emp WHERE ename like 'S%';
+
+如何显示第三个字符为大写O的所有员工的姓名和工资？
+
+SELECT ename,sal FROM emp WHERE ename like '__O%'; 
+
+n 在where条件中使用in
+
+问题：如何显示empno为7844, 7839,123,456 的雇员情况？
+
+SELECT * FROM emp WHERE empno in (7844, 7839,123,456); 
+
+n 使用is null的操作符
+
+问题：如何显示没有上级的雇员的情况？
+
+错误写法：select * from emp where mgr = '';
+
+正确写法：SELECT * FROM emp WHERE mgr is null; 
+
+## 6. [oracle表查询(2)](http://taeky.javaeye.com/blog/609924)
+
+n 使用逻辑操作符号
+
+问题：查询工资高于500或者是岗位为MANAGER的雇员，同时还要满足他们的姓名首字母为大写的J？
+
+ SELECT * FROM emp WHERE (sal >500 or job = 'MANAGER') and ename LIKE 'J%'; 
+
+n 使用order by 字句  默认asc
+
+问题：如何按照工资的从低到高的顺序显示雇员的信息？
+
+ SELECT * FROM emp ORDER by sal;
+
+问题：按照部门号升序而雇员的工资降序排列
+
+SELECT * FROM emp ORDER by deptno, sal DESC; 
+
+n 使用列的别名排序
+
+问题：按年薪排序
+
+select ename, (sal+nvl(comm,0))*12 "年薪" from emp order by "年薪" asc;
+
+别名需要使用“”号圈中,英文不需要“”号
+
+n 分页查询
+
+等学了子查询再说吧。。。。。。。。
+
+Clear 清屏命令
+
+oracle表复杂查询
+
+n 说明
+
+在实际应用中经常需要执行复杂的数据统计，经常需要显示多张表的数据，现在我们给大家介绍较为复杂的select语句
+
+n数据分组 ——max，min， avg， sum， count
+
+问题：如何显示所有员工中最高工资和最低工资？
+
+SELECT MAX(sal),min(sal) FROM emp e; 
+
+最高工资那个人是谁？
+
+错误写法：select ename, sal from emp where sal=max(sal);
+
+正确写法：select ename, sal from emp where sal=(select max(sal) from emp);
+
+注意：select ename, max(sal) from emp;这语句执行的时候会报错，说ORA-00937：非单组分组函数。因为max是分组函数，而ename不是分组函数.......
+
+但是select min(sal), max(sal) from emp;这句是可以执行的。因为min和max都是分组函数，就是说：如果列里面有一个分组函数，其它的都必须是分组函数，否则就出错。这是语法规定的
+
+问题：如何显示所有员工的平均工资和工资总和？
+
+问题：如何计算总共有多少员工问题：如何
+
+扩展要求：
+
+查询最高工资员工的名字，工作岗位
+
+SELECT ename, job, sal FROM emp e where sal = (SELECT MAX(sal) FROM emp);
+
+显示工资高于平均工资的员工信息
+
+SELECT * FROM emp e where sal > (SELECT AVG(sal) FROM emp); 
+
+n group by 和 having子句
+
+group by用于对查询的结果分组统计，
+
+having子句用于限制分组显示结果。
+
+问题：如何显示每个部门的平均工资和最高工资？
+
+SELECT AVG(sal), MAX(sal), deptno FROM emp GROUP by deptno;
+
+（注意：这里暗藏了一点，如果你要分组查询的话，分组的字段deptno一定要出现在查询的列表里面，否则会报错。因为分组的字段都不出现的话， 就没办法分组了）
+
+问题：显示每个部门的每种岗位的平均工资和最低工资？ 
+
+SELECT min(sal), AVG(sal), deptno, job FROM emp GROUP by deptno, job;
+
+问题：显示平均工资低于2000的部门号和它的平均工资？
+
+SELECT AVG(sal), MAX(sal), deptno FROM emp GROUP by deptno having AVG(sal) < 2000; 
+
+n 对数据分组的总结
+
+1 分组函数只能出现在选择列表、having、order by子句中(不能出现在where中) 
+
+2 如果在select语句中同时包含有group by, having, order by 那么它们的顺序是group by, having, order by 
+
+3 在选择列中如果有列、表达式和分组函数，那么这些列和表达式必须有一个出现在group by 子句中，否则就会出错。
+
+如SELECT deptno, AVG(sal), MAX(sal) FROM emp GROUP by deptno HAVING AVG(sal) < 2000;
+
+这里deptno就一定要出现在group by 中
+
+多表查询
+
+n 说明
+
+多表查询是指基于两个和两个以上的表或是视图的查询。在实际应用中，查询单个表可能不能满足你的需求，（如显示sales部门位置和其员工的姓 名），这种情况下需要使用到（dept表和emp表）
+
+问题：显示雇员名，雇员工资及所在部门的名字【笛卡尔集】？
+
+规定：多表查询的条件是 至少不能少于 表的个数-1 才能排除笛卡尔集
+
+（如果有N张表联合查询，必须得有N-1个条件，才能避免笛卡尔集合）
+
+SELECT e.ename, e.sal, d.dname FROM emp e, dept d WHERE e.deptno = d.deptno;
+
+问题：显示部门号为10的部门名、员工名和工资？
+
+ SELECT d.dname, e.ename, e.sal FROM emp e, dept d WHERE e.deptno = d.deptno and e.deptno = 10;
+
+问题：显示各个员工的姓名，工资及工资的级别？
+
+先看salgrade的表结构和记录
+
+SQL>select * from salgrade;
+
+GRADE     LOSAL     HISAL 
+
+-------------  -------------  ------------
+
+ 1       700       200 
+    2       1201     1400 
+    3       1401     2000 
+    4       2001     3000 
+    5       3001     9999 
+SELECT e. ename, e.sal, s.grade FROM emp e, salgrade s WHERE e.sal BETWEEN s.losal AND s.hisal;
+
+扩展要求：
+
+问题：显示雇员名，雇员工资及所在部门的名字，并按部门排序？
+
+ SELECT e.ename, e.sal, d.dname FROM emp e, dept d WHERE e.deptno = d.deptno ORDER by e.deptno;
+
+（注意：如果用group by，一定要把e.deptno放到查询列里面）
+
+n 自连接
+
+自连接是指在同一张表的连接查询
+
+问题：显示某个员工的上级领导的姓名？
+
+比如显示员工‘FORD’的上级
+
+SELECT worker.ename, boss.ename FROM emp worker,emp boss WHERE worker.mgr = boss.empno AND worker.ename = 'FORD';
+
+子查询 
+
+n 什么是子查询
+
+子查询是指嵌入在其他sql语句中的select语句，也叫嵌套查询。
+
+n 单行子查询
+
+单行子查询是指只返回一行数据的子查询语句
+
+请思考：显示与SMITH同部门的所有员工？
+
+思路：
+
+1 查询出SMITH的部门号
+
+select deptno from emp WHERE ename = 'SMITH'; 
+
+2 显示
+
+SELECT * FROM emp WHERE deptno = (select deptno from emp WHERE ename = 'SMITH');
+
+数据库在执行sql 是从左到右扫描的， 如果有括号的话，括号里面的先被优先执行。
+
+n 多行子查询
+
+多行子查询指返回多行数据的子查询
+
+请思考：如何查询和部门10的工作相同的雇员的名字、岗位、工资、部门号
+
+SELECT DISTINCT job FROM emp WHERE deptno = 10; 
+
+SELECT * FROM emp WHERE job IN (SELECT DISTINCT job FROM emp WHERE deptno = 10);
+
+（注意：不能用job=..，因为等号=是一对一的）
+
+n 在多行子查询中使用all操作符
+
+问题：如何显示工资比部门30的所有员工的工资高的员工的姓名、工资和部门号？
+
+ SELECT ename, sal, deptno FROM emp WHERE sal > all (SELECT sal FROM emp WHERE deptno = 30);
+
+扩展要求：
+
+大家想想还有没有别的查询方法。
+
+SELECT ename, sal, deptno FROM emp WHERE sal > (SELECT MAX(sal) FROM emp WHERE deptno = 30);
+
+执行效率上， 函数高得多 
+
+n 在多行子查询中使用any操作符
+
+问题：如何显示工资比部门30的任意一个员工的工资高的员工姓名、工资和部门号？
+
+ SELECT ename, sal, deptno FROM emp WHERE sal > ANY (SELECT sal FROM emp WHERE deptno = 30);
+
+扩展要求：
+
+大家想想还有没有别的查询方法。
+
+SELECT ename, sal, deptno FROM emp WHERE sal > (SELECT min(sal) FROM emp WHERE deptno = 30); 
+
+n 多列子查询
+
+单行子查询是指子查询只返回单列、单行数据，多行子查询是指返回单列多行数据，都是针对单列而言的，而多列子查询是指查询返回多个列数据的子查询 语句。
+
+请思考如何查询与SMITH的部门和岗位完全相同的所有雇员。
+
+SELECT deptno, job FROM emp WHERE ename = 'SMITH'; 
+
+SELECT * FROM emp WHERE (deptno, job) = (SELECT deptno, job FROM emp WHERE ename = 'SMITH'); 
+
+n 在from子句中使用子查询
+
+请思考：如何显示高于自己部门平均工资的员工的信息
+
+思路：
+
+\1. 查出各个部门的平均工资和部门号
+
+SELECT deptno, AVG(sal) mysal FROM emp GROUP by deptno; 
+
+\2. 把上面的查询结果看做是一张子表
+
+SELECT e.ename, e.deptno, e.sal, ds.mysal FROM emp e, (SELECT deptno, AVG(sal) mysal FROM emp GROUP by deptno) ds WHERE e.deptno = ds.deptno AND e.sal > ds.mysal;
+
+如何衡量一个程序员的水平？
+
+网络处理能力， 数据库， 程序代码的优化程序的效率要很高
+
+小总结：
+
+在这里需要说明的当在from子句中使用子查询时，该子查询会被作为一个视图来对待，因此叫做内嵌视图，当在from子句中使用子查询时，必须给 子查询指定别名。
+
+注意：别名不能用as，如：SELECT e.ename, e.deptno, e.sal, ds.mysal FROM emp e, (SELECT deptno, AVG(sal) mysal FROM emp GROUP by deptno) as ds WHERE e.deptno = ds.deptno AND e.sal > ds.mysal;
+
+在ds前不能加as，否则会报错 （给表取别名的时候，不能加as；但是给列取别名，是可以加as的）
+
+n 分页查询
+
+按雇员的id号升序取出
+
+oracle的分页一共有三种方式
+
+1.根据rowid来分
+
+ select * from t_xiaoxi where rowid in (select rid from (select rownum rn, rid from(select rowid rid, cid from t_xiaoxi order by cid desc) where rownum<10000) where rn>9980) order by cid desc;
+
+执行时间0.03秒
+
+2.按分析函数来分
+
+select * from (select t.*, row_number() over(order by cid desc) rk from t_xiaoxi t) where rk<10000 and rk>9980;
+
+执行时间1.01秒 
+
+3.按rownum来分
+
+ select * from (select t.*,rownum rn from(select * from t_xiaoxi order by cid desc)t where rownum<10000) where rn>9980;
+
+执行时间0.1秒
+
+其中t_xiaoxi为表名称，cid为表的关键字段，取按cid降序排序后的第9981-9999条记录，t_xiaoxi表有70000多条 记录。
+
+个人感觉1的效率最好，3次之，2最差。
+
+//测试通过的分页查询okokok 
+
+select * from (select a1.*, rownum rn from(select ename,job from emp) a1 where rownum<=10)where rn>=5;
+
+下面最主要介绍第三种：按rownum来分
+
+\1. rownum 分页
+
+SELECT * FROM emp; 
+
+\2. 显示rownum[oracle分配的] 
+
+SELECT e.*, ROWNUM rn FROM (SELECT * FROM emp) e;
+
+rn相当于Oracle分配的行的ID号
+
+3.挑选出6—10条记录
+
+先查出1-10条记录
+
+SELECT e.*, ROWNUM rn FROM (SELECT * FROM emp) e WHERE ROWNUM <= 10;
+
+如果后面加上rownum>=6是不行的，
+
+ \4. 然后查出6-10条记录 
+
+SELECT * FROM (SELECT e.*, ROWNUM rn FROM (SELECT * FROM emp) e WHERE ROWNUM <= 10) WHERE rn >= 6; 
+
+\5. 几个查询变化 
+
+a. 指定查询列，只需要修改最里层的子查询
+
+只查询雇员的编号和工资
+
+SELECT * FROM (SELECT e.*, ROWNUM rn FROM (SELECT ename, sal FROM emp) e WHERE ROWNUM <= 10) WHERE rn >= 6; 
+
+b. 排序查询，只需要修改最里层的子查询
+
+工资排序后查询6-10条数据
+
+SELECT * FROM (SELECT e.*, ROWNUM rn FROM (SELECT ename, sal FROM emp ORDER by sal) e WHERE ROWNUM <= 10) WHERE rn >= 6; 
+
+n 用查询结果创建新表
+
+这个命令是一种快捷的建表方式
+
+CREATE TABLE mytable (id, name, sal, job, deptno) as SELECT empno, ename, sal, job, deptno FROM emp;
+
+创建好之后，desc mytable；和select * from mytable;看看结果如何？
+
+n 合并查询
+
+有时在实际应用中，为了合并多个select语句的结果，可以使用集合操作符号union，union all，intersect，minus
+
+多用于数据量比较大的数据局库，运行速度快。
+
+1). Union
+
+该操作符用于取得两个结果集的并集。当使用该操作符时，会自动去掉结果集中重复行。
+
+SELECT ename, sal, job FROM emp WHERE sal >2500 
+
+UNION
+
+SELECT ename, sal, job FROM emp WHERE job = 'MANAGER';
+
+ 2).union all
+
+该操作符与union相似，但是它不会取消重复行，而且不会排序。
+
+SELECT ename, sal, job FROM emp WHERE sal >2500
+
+UNION ALL
+
+SELECT ename, sal, job FROM emp WHERE job = 'MANAGER';
+
+该操作符用于取得两个结果集的并集。当使用该操作符时，会自动去掉结果集中重复行。
+
+3). Intersect
+
+使用该操作符用于取得两个结果集的交集。
+
+SELECT ename, sal, job FROM emp WHERE sal >2500
+
+INTERSECT
+
+SELECT ename, sal, job FROM emp WHERE job = 'MANAGER';
+
+ 4). Minus
+
+使用改操作符用于取得两个结果集的差集，他只会显示存在第一个集合中，而不存在第二个集合中的数据。
+
+SELECT ename, sal, job FROM emp WHERE sal >2500
+
+MINUS
+
+SELECT ename, sal, job FROM emp WHERE job = 'MANAGER';
+
+（MINUS就是减法的意思）
+
+创建数据库有两种方法：
+
+1). 通过oracle提供的向导工具。
+
+database Configuration Assistant 【数据库配置助手】
+
+2).我们可以用手工步骤直接创建。 
+
+## 7. [java操作oracle](http://taeky.javaeye.com/blog/611443)
+
+内容介绍
+
+1.上节回顾
+
+2.java程序如何操作oracle √ 
+3.如何在oracle中操作数据 
+4.oracle事务处理 
+5.sql函数的使用 √ 
+期望目标 
+1.掌握oracle表对数据操作技巧 
+2.掌握在java程序中操作oracle 
+3.理解oracle事物概念 
+4.掌握
