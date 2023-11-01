@@ -464,12 +464,6 @@ set linesize 90
 
 #  四、oracle用户管理
 
-
-
-权限: 对象权限 系统权限 ...resource 建表
-
-
-
 ## 创建用户及授权
 
 概述：在oracle中要创建一个新的用户使用create user语句，<font color=red>一般是具有dba(数据库管理员)的权限才能进进行。</font>
@@ -513,49 +507,65 @@ SQL> alter user 用户名 identified by 新密码  #修改别人的密码
 drop user 用户名 [cascade]
 ```
 
+## 对权限的维护
+
+\* 希望xiaoming用户可以去查询scott的emp表/还希望xiaoming可以把这个权限继续给别人。
+
+**如果是对象权限**
+
+```sql
+grant select on emp to xiaoming with grant option
+```
+
+我的操作过程：
+
+```sql
+SQL> conn scott/tiger;
+已连接。
+SQL> grant select on scott.emp to xiaoming with grant option;
+授权成功。
+SQL> conn system/p;
+已连接。
+SQL> create user xiaohong identified by m123;
+用户已创建。
+SQL> grant connect to xiaohong;
+授权成功。 
+SQL> conn xiaoming/m12;
+已连接。
+SQL> grant select on scott.emp to xiaohong;
+授权成功。 
+```
+
+**如果是系统权限**
+
+system给xiaoming权限时：
+
+```sql
+ grant connect to xiaoming with admin option
+```
+
+**撤销权限**
+
+问题：如果scott把xiaoming对emp表的查询权限回收，那么xiaohong会怎样？
+
+答案：被回收。
+
+下面是我的操作过程：
+
+```sql
+SQL> conn scott/tiger;
+已连接。
+SQL> revoke select on emp from xiaoming;
+撤销成功。 
+SQL> conn xiaohong/m123;
+已连接。
+SQL> select * from scott.emp;
+SQL> ORA-00942: 表或视图不存在
+```
 
 
 
-
-// 权限的维护
-
-
-
-show user
-
-\> scott
-
-希望小明用户可以去查询scott中的emp表/还希望小明还可以把emp表授权给其他用户
-
--- 如果是对象权限, 就是 with grant option
-
-grant select on emp to xiaoming with grant option;
-
--- 如果是系统权限, 
-
-grant connect to xiaoming with admin option;
-
-
-
-如果scoot把xiaoming权限回收, 小明还传递的权限--->都没有了
-
-
-
-
-
-权限管理
-
-
-
-用户管理
-
-
-
-表管理
-
-
-
-## 用户管理的综合案例
+## 用户管理的案例
 
 概述：创建的新用户是没有任何权限的，甚至连登陆的数据库的权限都没有，需要为其指定相应的权限。给一个用户赋权限使用命令grant，回收权限使用命令revoke。
 
@@ -575,165 +585,96 @@ SQL>
 
 注意：grant connect to xiaoming;
 
-\* 希望xiaoming用户可以去查询emp表 
+例子
 
 \* 希望xiaoming用户可以去查询scott的emp表
 
+```sql
  grant select on emp to xiaoming 
+```
 
 \* 希望xiaoming用户可以去修改scott的emp表
 
+```sql
  grant update on emp to xiaoming
+```
 
 \* 希望xiaoming用户可以去修改/删除，查询，添加scott的emp表
 
+```sql
  grant all on emp to xiaoming
+```
 
 \* scott希望收回xiaoming对emp表的查询权限
 
- revoke select on emp from xiaoming 
-
-//对权限的维护。
-
-\* 希望xiaoming用户可以去查询scott的emp表/还希望xiaoming可以把这个权限继续给别人。
-
---如果是对象权限，就加入 with grant option
-
-grant select on emp to xiaoming with grant option
-
-我的操作过程：
-
-```
- SQL> conn scott/tiger;
-
-已连接。
-
-SQL> grant select on scott.emp to xiaoming with grant option;
-
-授权成功。
-
-SQL> conn system/p;
-
-已连接。
-
-SQL> create user xiaohong identified by m123;
-
-用户已创建。
-
-SQL> grant connect to xiaohong;
-
-授权成功。 
-
-SQL> conn xiaoming/m12;
-
-已连接。
-
-SQL> grant select on scott.emp to xiaohong;
-
-授权成功。 
+```sql
+revoke select on emp from xiaoming 
 ```
 
---如果是系统权限。
-
-system给xiaoming权限时：
-
- grant connect to xiaoming with admin option
-
-问题：如果scott把xiaoming对emp表的查询权限回收，那么xiaohong会怎样？
-
-答案：被回收。
-
-下面是我的操作过程：
-
-```
-SQL> conn scott/tiger;
-
-已连接。
-
-SQL> revoke select on emp from xiaoming;
-
-撤销成功。 
-
-SQL> conn xiaohong/m123;
-
-已连接。
-
-SQL> select * from scott.emp; 
-
-select * from scott.emp
-```
-
- 
-
-第 1 行出现错误:
-
-ORA-00942: 表或视图不存在
-
-结果显示：小红受到诛连了。。 
-
-n 使用profile管理用户口令
+## 使用profile管理用户口令
 
 概述：profile是口令限制，资源限制的命令集合，当建立数据库的，oracle会自动建立名称为default的profile。当建立用户没有指定profile选项，那么oracle就会将default分配给用户。 
 
-1.账户锁定
+### 1.账户锁定
 
 概述：指定该账户(用户)登陆时最多可以输入密码的次数，也可以指定用户锁定的时间(天)一般用dba的身份去执行该命令。
 
-例子：指定scott这个用户最多只能尝试3次登陆，锁定时间为2天，让我们看看怎么实现。创建profile文件
+例子：
 
+指定scott这个用户最多只能尝试3次登陆，锁定时间为2天，让我们看看怎么实现。创建profile文件
+
+```sql
 SQL> create profile lock_account limit failed_login_attempts 3 password_lock_time 2; 
-
 SQL> alter user scott profile lock_account; 
+```
 
-2.给账户(用户)解锁 
+### 2.给用户解锁
 
+```sql
 SQL> alter user tea account unlock; 
+```
 
-3.终止口令
+### 3.终止口令
 
 为了让用户定期修改密码可以使用终止口令的指令来完成，同样这个命令也需要dba的身份来操作。
 
-例子：给前面创建的用户tea创建一个profile文件，要求该用户每隔10天要修改自己的登陆密码，宽限期为2天。看看怎么做。
+例子：
 
+给前面创建的用户tea创建一个profile文件，要求该用户每隔10天要修改自己的登陆密码，宽限期为2天。看看怎么做。
+
+```sql
 SQL> create profile myprofile limit password_life_time 10 password_grace_time 2; 
-
 SQL> alter user tea profile myprofile;
+```
 
-口令历史
+### 4.口令历史
 
 概述：如果希望用户在修改密码时，不能使用以前使用过的密码，可使用口令历史，这样oracle就会将口令修改的信息存放到数据字典中，这样当用户修改密码时，oracle就会对新旧密码进行比较，当发现新旧密码一样时，就提示用户重新输入密码。
 
 例子：
 
-1）建立profile
-
-SQL>create profile password_history limit password_life_time 10 password_grace_time 2 password_reuse_time 10 
-
 password_reuse_time //指定口令可重用时间即10天后就可以重用
 
-2）分配给某个用户 
+```sql
+-- 1）建立profile
+SQL>create profile password_history limit password_life_time 10 password_grace_time 2 password_reuse_time 10 
+-- 2）分配给某个用户 
+SQL> alter user tea profile password_history;
+```
 
-n 删除profile
+### 5.删除profile
 
 概述：当不需要某个profile文件时，可以删除该文件。
 
-SQL> drop profile password_history 【casade】
+```sql
+SQL> drop profile password_history [casade]
+```
 
-注意：文件删除后，用这个文件去约束的那些用户通通也都被释放了。
+注意：文件删除后，用这个文件去约束的那些用户通通也都被释放了。加了casade，就会把级联的相关东西也给删除掉
 
-加了casade，就会把级联的相关东西也给删除掉
+## oracle表的管理
 
-## 4. [oracle表的管理(数据类型，表创建删除，数据 CRUD操作)](http://taeky.javaeye.com/blog/607467)
-
-内容介绍 
-
-· 1.上节回顾
-
-· 2.oracle的表的管理
-
-· 3.基本查询
-
-· 4.复杂查询
+数据类型，表创建删除，数据 CRUD操作
 
 · 5.oracle数据库的创建
 期望目标 
