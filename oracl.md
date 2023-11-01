@@ -270,7 +270,7 @@ orclpdb =
 4. 表（Table）：
    表是数据库中的`基本存储结构`，用于存储数据。表由一个或多个列组成，每列定义了特定的数据类型。表包含行（记录），每行代表一个数据实体。用户可以在自己的模式中创建表，并使用SQL语句对表进行插入、更新、删除和查询操作。
 
-<img src="oracl.assets/4564b7567ded44e59cc56614e7e7a3cb.png" alt="img" style="zoom:67%;" />
+<img src="oracl.assets/image-20231101221101818.png" alt="image-20231101221101818" style="zoom:67%;" />
 
 # 二、Oracle数据库的用户
 
