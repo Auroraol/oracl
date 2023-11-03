@@ -257,7 +257,7 @@ orclpdb =
 
 安装可参考：[Windows10环境下载安装Oracle19c教程](https://blog.csdn.net/qq_29864051/article/details/131261905?spm=1001.2014.3001.5501)
 
-## Oracle的体系结构
+## 1.1 Oracle的体系结构
 
 在Oracle数据库中，存在以下层次关系：实例（Instance） > 用户（User） > 表空间（Tablespace） > 表（Table）
 
@@ -472,15 +472,25 @@ spool d:\b.sql 并输入 spool off
 
 说明：设置显示行的宽度，默认是80个字符
 
+```oracle
 show linesize 
-
 set linesize 90
+```
 
 **2.pagesize**
 
 说明：设置每页显示的行数目，默认是14
 
-用法和linesize一样
+```oracle
+set pagesize 20
+```
+
+**3. time on**
+
+```oracle
+SQL> set time on
+08:30:13 SQL>
+```
 
 #  四、oracle用户管理
 
@@ -498,7 +508,7 @@ set linesize 90
 
 > 是授予系统管理员的，拥有该角色的用户就能成为系统管理员了，它拥有所有的系统权限
 
-## 创建用户及授权
+## 4.1 创建用户及授权
 
 概述：在oracle中要创建一个新的用户使用create user语句，<font color=red>一般是具有dba(数据库管理员)的权限才能进进行。</font>
 
@@ -518,7 +528,7 @@ SQL> grant connect,resource,dba to newuser;	        # 赋权限
 Grant succeeded.
 ```
 
-## 用户修改密码
+## 4.2 用户修改密码
 
 概述：
 
@@ -531,7 +541,7 @@ SQL> password 用户名      #修改自己的密码
 SQL> alter user 用户名 identified by 新密码  #修改别人的密码
 ```
 
-## 删除用户
+## 4.3 删除用户
 
 概述：<font color=red>一般以dba的身份去删除某个用户，如果用其它用户去删除用户则需要具有drop user的权限。</font>
 
@@ -541,7 +551,7 @@ SQL> alter user 用户名 identified by 新密码  #修改别人的密码
 drop user 用户名 [cascade]
 ```
 
-## 对权限的维护
+## 4.4 对权限的维护
 
 \* 希望xiaoming用户可以去查询scott的emp表/还希望xiaoming可以把这个权限继续给别人。
 
@@ -597,9 +607,7 @@ SQL> select * from scott.emp;
 SQL> ORA-00942: 表或视图不存在
 ```
 
-
-
-## 用户管理的案例
+## 4.5 用户管理的案例
 
 概述：创建的新用户是没有任何权限的，甚至连登陆的数据库的权限都没有，需要为其指定相应的权限。给一个用户赋权限使用命令grant，回收权限使用命令revoke。
 
@@ -645,11 +653,11 @@ SQL>
 revoke select on emp from xiaoming 
 ```
 
-## 使用profile管理用户口令
+## 4.6 使用profile管理用户口令
 
 概述：profile是口令限制，资源限制的命令集合，当建立数据库的，oracle会自动建立名称为default的profile。当建立用户没有指定profile选项，那么oracle就会将default分配给用户。 
 
-### 1.账户锁定
+### 4.6.1 账户锁定
 
 概述：指定该账户(用户)登陆时最多可以输入密码的次数，也可以指定用户锁定的时间(天)一般用dba的身份去执行该命令。
 
@@ -668,7 +676,7 @@ SQL> alter user scott profile lock_account;
 alter user 用户名 account lock;
 ```
 
-### 2.给用户解锁
+### 4.6.2 给用户解锁
 
 ```sql
 alter user 用户名 account unlock;
@@ -680,7 +688,7 @@ alter user 用户名 account unlock;
 SQL> alter user tea account unlock; 
 ```
 
-### 3.终止口令
+### 4.6.3 终止口令
 
 为了让用户定期修改密码可以使用终止口令的指令来完成，同样这个命令也需要dba的身份来操作。
 
@@ -693,7 +701,7 @@ SQL> create profile myprofile limit password_life_time 10 password_grace_time 2;
 SQL> alter user tea profile myprofile;
 ```
 
-### 4.口令历史
+### 4.6.4 口令历史
 
 概述：如果希望用户在修改密码时，不能使用以前使用过的密码，可使用口令历史，这样oracle就会将口令修改的信息存放到数据字典中，这样当用户修改密码时，oracle就会对新旧密码进行比较，当发现新旧密码一样时，就提示用户重新输入密码。
 
@@ -708,7 +716,7 @@ SQL>create profile password_history limit password_life_time 10 password_grace_t
 SQL> alter user tea profile password_history;
 ```
 
-### 5.删除profile
+### 4.6.5 删除profile
 
 概述：当不需要某个profile文件时，可以删除该文件。
 
@@ -718,7 +726,7 @@ SQL> drop profile password_history [casade]
 
 注意：文件删除后，用这个文件去约束的那些用户通通也都被释放了。加了casade，就会把级联的相关东西也给删除掉
 
-## 其他
+## 4.7 其他
 
 ```sql
 # 查看当前用户
@@ -737,37 +745,283 @@ alter tablespace 旧名 rename to 新名;
 drop tablespace 表空间名 including contents and datafiles;
 ```
 
-# 五、oracle中sql语句
+# 五、数据库oracle与mysql区别:crossed_swords:
 
-## 数据库oracle与mysql在语法区别
+## 5.1 数据类型
 
-### 一、数据类型
-
-![image-20231101211247849](oracl.assets/image-20231101211247849.png)
-
-**1. Number类型**
+### 5.1.1 Number类型
 
 + MySQL中是没有Number类型的，但有int、decimal 、tinyint、smallint、mediumint、bigint等类型
 
 + Oracle中
 
   + Number(5,1) 对应MySQL中的decimal(5,1)
-
   + Number(5) 对应int(5), mysql8.0直接用int
+  + 没有int、decimal 、tinyint、smallint、mediumint、bigint等类型
 
-**2. Varchar2(n)类型**
+###  5.1.2 Varchar2(n)类型
 
-+ MySQL中用varchar(n)替代Oracle Varchar2(n)类型的类型是类型
++ MySQL中用varchar(n)替代Oracle Varchar2(n)类型
++ Oracle中
+  + 有CHAR、NCHAR、VARCHAR2和NVARCHAR2类型
 
-**3. Date 类型**
+###  5.1.3 Date 类型
 
 + MySQL 中的日期时间类型有Date、Time、Datetime等类型
   + MySQL中Date类型仅表示日期(年-月-日)
   + Time类型仅表示时间（时:分:秒)
   + Datetime类型表示日期时间(年-月-日 时:分:秒)
-+ Oracle中的Date类型和MySQL中的Datetime类型一致
+  
++ Oracle中的Date类型和MySQL中的Datetime类型一致, 
 
-### 二、函数
+  + ORACLE中默认的日期格式`DD-MON--YY`如 '09-6月-99'表示1999年6月9号
+
+  + 改日期的默认格式
+
+    ```sql
+    alter session set nls-date-format ='yyyy-mm-dd';
+    insert into student values('A002','MIKE','男'，'1905-05-06'，10)；  #ok
+    ```
+
++ 例子
+
+  ```sql
+  -- 日期类型
+  08:46:08 SQL> insert into st values('信息', '1999-12-02');
+  insert into st values('信息', '1999-12-02')
+                                *
+  第 1 行出现错误:
+  ORA-01861: 文字与格式字符串不匹配
+  
+  
+  08:47:20 SQL> insert into st values('信息', '1999-12月-02');
+  insert into st values('信息', '1999-12月-02')
+                                *
+  第 1 行出现错误:
+  ORA-01861: 文字与格式字符串不匹配
+  08:47:31 SQL> insert into st values('信息', '09-12月-1999');  #ok
+  ```
+
+## 5.2 创建表空间/数据库
+
+### 5.2.1  Oracle创建表空间(数据库)
+
+**创建表空间**
+
+```sql
+create tablespace 表空间名称 logging datafile '路径\名称.dbf' size 2000m autoextend on next 500m maxsize 30720m extent management local;
+```
+
+示例： 
+
+```sql
+create tablespace NWZC logging datafile 'D:\javautils\oracle1\oradata\ORCL\zuigaofa.dbf' size 2000m autoextend on next 500m maxsize 30720m extent management local;
+```
+
+![img](oracl.assets/6c1650acb3094c24a83ab6447b218157.png)
+
+**创建用户**
+
+```sql
+create user 用户名 identified by 密码 default tablespace 表空间名;
+```
+
+切换到指定用户，修改用户默认表空间：
+
+```sql
+alter database default tablespace 表空间;
+```
+
+示例： 
+
+```sql
+alter database  default tablespace NWZC;
+```
+
+![image-20231103203348575](oracl.assets/image-20231103203348575.png)
+
+**授权** 
+
+```sql
+grant exp_full_database to 用户名 ;
+grant imp_full_database to 用户名 ;
+grant resource to 用户名 ;
+grant connect to 用户名 ;
+grant dba to 用户名 ;
+```
+
+示例：
+
+```sql
+grant exp_full_database to NWZC;
+grant imp_full_database to NWZC;
+grant resource to NWZC;
+grant connect to NWZC;
+grant dba to NWZC;
+```
+
+<img src="oracl.assets/65691c818e304135abce41a2e2f49683.png" alt="img" style="zoom: 80%;" />
+
+### 5.2.2 MySQL创建数据库
+
+```sql
+-- 查询数据库
+SHOW DATABASES;
+-- 创建数据库
+CREATE DATABASE 数据库名称;
+-- 创建数据库(判断，如果不存在则创建)
+CREATE DATABASE IF NOT EXISTS 数据库名称;
+ 
+-- 查看当前使用的数据库
+SELECT DATABASE();
+-- 使用数据库
+USE 数据库名称;
+```
+
+## 5.3 删除表空间/数据库
+
+### 5.3.1  Oracle删除表空
+
+1、删除无任何数据对象的表空间：
+
+```sql
+drop tablespace xxx
+```
+
+2、删除有任何数据对象的表空间
+
+```sql
+drop tablespace xxx including contents and datafiles;
+```
+
+### 5.3.2 MySQL删除数据库
+
+```sql
+-- 删除数据库
+DROP DATABASE 数据库名称;
+-- 删除数据库(判断，如果存在则删除)
+DROP DATABASE IF EXISTS 数据库名称;
+```
+
+
+
+## 5.4 创建临时表
+
+### 5.4.1 Oracle创建临时表
+
+Oracle临时表默认所有会话内可见，一旦创建就会存在，直到显式删除。可以设置临时表仅在当前会话内或事务内可见。
+
+```sql
+CREATE GLOBAL TEMPORARY TABLE temp_table (
+    id NUMBER,
+    name VARCHAR2(50)
+) ON COMMIT DELETE ROWS;
+```
+
+ON COMMIT DELETE ROWS指定了当事务提交时，临时表中的所有行都会被删除。这保证了当会话结束时，所有临时数据都会被清除。 
+
+**设置临时表消失的时机：**
+
+- ON COMMIT DELETE ROWS ：数据行只有在当前事务中可见，也是默认值,事务提交后数据行将消失
+- ON COMMIT PRESERVE ROWS ：数据行仅在当前会话中可见
+
+**临时表中数据的增删改查，跟普通表一致：**
+
+```sql
+Insert into tmp_gttable (id,name) values(1,'test');
+Update tmp_gttable set name = 'test_update' where id = 1；
+Delete from tmp_gttable where id = 1;
+```
+
+### 5.4.2 MySQL创建临时
+
+MySQL临时表只在当前会话可见，一旦会话关闭，临时表会自动删除。
+
+```sql
+CREATE TEMPORARY TABLE 表名 (字段列表);
+```
+
+示例如下：
+
+```sql
+CREATE TEMPORARY TABLE tmp_table (
+    id INT NOT NULL AUTO_INCREMENT,
+    name VARCHAR(50) NOT NULL,
+    PRIMARY KEY (id)
+) ENGINE=InnoDB;
+```
+
+临时表创建成功后，可以使用SELECT、INSERT、UPDATE、DELETE等语句对其进行操作，与普通表的语法相同。
+
+## 5.5 insert语法
+
+### 5.5.1 Oracle创建表和插入记录
+
+```sql
+# 在Oracle中批量添加时
+insert all
+into student (id,name,sex) values ('01','小明','男')
+into student (id,name,sex)values ('02'，'小红','女')
+
+# 在Oracle中批量添加时, 可以同时对多个表进行批量添加
+insert all
+into student (id,name,sex) values ('01','小明','男')
+into student (id,name,sex) values ('02'，'小红','女')
+into teacher (id,name,sex) values ('01'，'王老师','女')
+into teacher (id,name,sex) values ('02'，'李老师','女')
+```
+
+### 5.5.2 MySQL创建表和插入记录
+
+```sql
+# 在MySQL中批量添加时
+insert into student (id,name,sex)
+values  
+(01,'小明','男'),
+(02,'小明','男'),
+(03,'小明','男');
+```
+
+MySQL插入日期使用now() 或 sysdate()，可以插入多条，使用逗号隔开
+删表数据：Oracle可以省略from：delete from t_student; (删除所有数据)
+
+**外键约束：**Oracle是constraints, MySQL是constraint
+
+级联操作：
+
+- Oracle：on delete set null 或者on delete cascade
+- MySQL: on delete set null on update CASCADE
+
+## 5.6 分页
+
++ MySQL通过limit来获取前n条记录
+
++ Oracle可通过rownum获取前n条记录
++ 在Oracle中rownum作为where条件的一部分，而MySQL中limit不是where条件的一部分。   
+
+### 5.6.1 Oracle：rownum
+
+```sql
+-- oracle
+-- rownum语法如下：
+SELECT * FROM XJ_STUDENT WHERE ROWNUM = 1; -- 查询第一条数据
+SELECT * FROM XJ_STUDENT WHERE ROWNUM <= 10; -- 获取前10条数据
+-- 但rownum不支持查询后几条或第n(n>1)条数据，例如以下sql是不支持的
+SELECT * FROM XJ_STUDENT WHERE ROWNUM > 2;  #报错
+SELECT * FROM XJ_STUDENT WHERE ROWNUM = 3;  #报错
+```
+
+### 5.6.2 MySQL：limit
+
+```sql
+-- mysql
+-- limit 语法如下：
+select * from test2 order by sid desc limit 0,5;
+SELECT * from fw_department limit 3; -- 查询前3条数据
+SELECT * from fw_department limit 2, 4; -- 从第2(序号从0开始)条开始，查4条记录
+```
+
+## 5.7 函数
 
 **1. length(str)函数**
 
@@ -822,7 +1076,7 @@ drop tablespace 表空间名 including contents and datafiles;
 +  sysdate：返回当前日期+时间
 +  MySQL对应的函数为 now()
 
-### 三、其他
+## 5.8 其他
 
 **1. 引号**
 
@@ -984,7 +1238,7 @@ update parentdepid = values(parentdepid),
 	depname=values(depname);
 ```
 
-## oracle表的管理
+## 十、 oracle表的管理(杂)
 
 [Oracle的DCL、DDL、DML语言学习使用](https://blog.csdn.net/qq_29864051/article/details/131294279?spm=1001.2101.3001.6650.1&utm_medium=distribute.pc_relevant.none-task-blog-2~default~OPENSEARCH~Rate-1-131294279-blog-50623974.235^v38^pc_relevant_sort_base1&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2~default~OPENSEARCH~Rate-1-131294279-blog-50623974.235^v38^pc_relevant_sort_base1&utm_relevant_index=2)
 
@@ -1713,3 +1967,156 @@ database Configuration Assistant 【数据库配置助手】
 # 六、java操作oracle
 
 TODO
+
+# 七、事物
+
+##  7.1 Oracle：**完全支持事务**，默认不自动提交
+
+oracle默认不自动提交，需要用户手动提交，提交可以通过以下几个命令实现：
+
+- **BEGIN：**事务块开始的标志。事务块里的SQL语句要么全部执行成功，要么全部失败回滚。
+- COMMIT：提交事务。执行成功时，事务将被提交，并且对数据库的修改是可见的。
+- ROLLBACK：ROLLBACK用于取消尚未提交的事务，并将数据库恢复到事务开始之前的状态。当ROLLBACK语句执行成功时，事务中的所有修改都将被撤销。
+- SAVEPOINT：SAVEPOINT用于在事务中创建一个保存点，以便在事务执行过程中可以回滚到该保存点。它可以在事务中设置一个中间点，以便在需要时回滚到该点。
+- SET TRANSACTION：SET TRANSACTION用于设置事务的属性。通过该命令，可以设置事务的隔离级别、读写权限等属性。
+
+**⑴事务用于确保数据的一致性，由一组相关的DML语句组成，要么全部不执行，要么全部撤销。**
+
+**⑵当执行事务操作时，Oracle会自动在作用的表上加锁，以防止其他用户锁定该表，同时也在行上加行级锁，以防止其它事务在相应行上执行DML操作。**
+
+**⑶当执行事务提交或者回滚时，Oracle会确认事务变化或回滚事务、结束事务、删除保存点，释放锁。**
+
+**⑷事务期间应避免与使用者交互。**
+
+**⑸尽可能让事务持续时间越短越好。**
+
+**⑹在事务中尽可能存取最少的数据量。**
+
+**事务控制语句：**
+
+　　1、COMMIT:提交事务，对数据库的修改进行保存。
+
+　　2、ROLLBACK:回滚事务，取消对数据库所做的修改。
+
+　　3、SAVEPOINT:在事务中创建存储点。
+
+　　4、ROLLBACK TO <SAVEPOINT>:将事务回滚到存储点。
+
+　　5、SET TRANSACTION:设置事务的属性。
+
+**SET TRANSACTION：**可以用来设置事务的属性，但是必须放在事务的第一条。可以设置3个属性。
+
+　　1、设置事务的隔离级别。
+
+　　1）SET TRANSACTION READ ONLY
+
+　　2）SET TRANSACTION ISOLATION LEVEL READ COMMITTED
+
+　　3）SET TRANSACTION ISOLATION LEVEL SERIALIZABLE
+
+　　2、规定回滚事务时所使用的存储空间。
+
+　　3、对事务命名。SET TRANSACTION NAME 'tname';
+
+示例：操作dept表：
+
+```sql
+INSERT INTO dept VALUES(50,'a',NULL);      --插入两条记录
+INSERT INTO dept VALUES(60,'b',NULL); 
+SAVEPOINT a;                                --设置保存点
+INSERT INTO dept VALUES(70,'c',NULL);      --插入新的数据
+ROLLBACK TO SAVEPOINT a;                   --回到保存点a，则保存点后的SQL语句失效。
+select * FROM dept;                         --插入c的值没有了。
+ROLLBACK;                                   --回滚事务，插入的a和b的值也没有了。
+SELECT * FROM dept;
+```
+
+示例：
+
+```sql
+BEGIN
+    SAVEPOINT sp;
+    
+    -- 向学生表插入数据
+    INSERT INTO student_table (student_name, student_age) VALUES ('John', 18);
+    INSERT INTO student_table (student_name, student_age) VALUES ('Emma', 19);
+    
+    -- 向班级表插入数据
+    INSERT INTO class_table (class_name, class_size) VALUES ('Class A', 30);
+    INSERT INTO class_table (class_name, class_size) VALUES ('Class B', 28);
+    
+    COMMIT;
+EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK TO sp;
+        RAISE;
+END;
+```
+
+##  7.2 MySQL：仅innoDB支持事务，默认自动提交
+
+查看事务提交状态
+
+```sql
+SHOW STATUS LIKE 'Innodb_trx_id'
+```
+
+关闭事务提交：
+
+```sql
+set AutoCommit = 0;
+```
+
+手动提交事务：
+
+```sql
+START TRANSACTION;        -- 开始事务
+INSERT INTO student (name,age) VALUES ('Tom',18); -- 执行一些数据操作
+INSERT INTO score (student_id,score) VALUES (1,90);
+COMMIT;                -- 手动提交事务
+```
+
+# 八、数据备份恢复
+
+## 8.1 oracle导入dmp文件
+
+1.首先确保dmp版本和本地oracle版本一致
+
+2.将需要导入的dmp文件放在oracle11g的安装目录里面的`./admin/orcl/dpdump`目录下面
+
+![img](oracl.assets/4c2317300bff4e608c855a7b003b875d.png)
+
+3.右键dmp用notepad++打开，在第二行找到版本号，改成自己的oracle版本，例如我的版本是19c：
+
+![img](oracl.assets/ce47e64bc4c2494582c0ba646707d089.png)3.sqlplus：用system账号创建用户并授权
+
+```sql
+create user ZHANGSAN identified by 1234;
+grant connect , dba to ZHANGSAN ;
+grant resource to ZHANGSAN ;
+grant imp_full_database to ZHANGSAN ;
+grant exp_full_database to ZHANGSAN ;
+```
+
+4.cmd命令行：迁移
+
+```sql
+impdp ZHANGSAN/1234 dumpfile = XXX.dmp
+```
+
+<img src="oracl.assets/897f1199e9ed4dfaacf0584ddef21f59.png" alt="img" style="zoom: 80%;" />
+
+## 8.2 MySQL备份迁移
+
+直接用navicat转储和运行SQL文件即可：
+
+![img](oracl.assets/635a4c23a11b4d0e98cfef266f2dc883.png)
+
+
+
+# 九、数据库管理
+
+# 十、 plsql编程
+
+
+
